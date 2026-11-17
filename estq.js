@@ -116,3 +116,18 @@ function resetar() {
     })
 }
 
+
+function calcular() {
+    const valor1 = document.getElementById("valor1")
+    const valor2 = document.getElementById("valor2")
+    const resultado = document.getElementById("resultado")
+    const botao = document.getElementById("botaosomar")
+
+    botao.addEventListener("click", () => {
+        if(!valor1 || !valor2) {
+            return
+        }
+        resultado = valor1 + valor2
+    })
+    
+}
