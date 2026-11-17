@@ -8,7 +8,16 @@ const produtos = dadosSalvos ? JSON.parse(dadosSalvos) : [
     {id: 5, tipo: "Viés", cor:"Branco", qtcaixa: 12, total: 0, historico: []},
     {id: 6, tipo: "Viés", cor:"Mousse", qtcaixa: 12, total: 0, historico: []},
     {id: 7, tipo: "Viés", cor:"Base", qtcaixa: 12, total: 0, historico: []},
-    {id: 8, tipo: "Viés", cor:"Rubro", qtcaixa: 12, total: 0, historico: []}
+    {id: 8, tipo: "Viés", cor:"Rubro", qtcaixa: 12, total: 0, historico: []},
+    
+    {id: 9, tipo: "Tecido", cor: "Pink", qtcaixa: 1, total: 0, historico: []},
+    {id: 10, tipo: "Tecido", cor:"Maleta", qtcaixa: 1, total: 0, historico: []},
+    {id: 11, tipo: "Tecido", cor:"Preto", qtcaixa: 1, total: 0, historico: []},
+    {id: 12, tipo: "Tecido", cor:"Teos", qtcaixa: 1, total: 0, historico: []},
+    {id: 13, tipo: "Tecido", cor:"Branco", qtcaixa: 1, total: 0, historico: []},
+    {id: 14, tipo: "Tecido", cor:"Mousse", qtcaixa: 1, total: 0, historico: []},
+    {id: 15, tipo: "Tecido", cor:"Base", qtcaixa: 1, total: 0, historico: []},
+    {id: 16, tipo: "Tecido", cor:"Rubro", qtcaixa: 1, total: 0, historico: []}
 ]
 
 let elementoCor = document.getElementById("cores")
