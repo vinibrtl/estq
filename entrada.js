@@ -97,6 +97,7 @@ function resetar() {
         produtos.forEach((produto) => {
             produto.total = 0;
             produto.historico = [];
+            localStorage.removeItem("produtos");
         });
         
         atualizacoes.forEach((atualizar) => {
