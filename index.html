@@ -1,17 +1,238 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controle de estoque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: ferramenta de trabalho, direta, rápida no celular
+   IDEA: a etiqueta/cartela de cores de um armarinho
+   PICTURE: a própria lista de contagem é o centro
+   COLOUR and TYPE: branco, tinta azul-escura, vermelho-linha como destaque; Outfit + Inter
+   LAYOUT: barra de abas e busca fixa, lista em uma coluna, resumo no fim */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0f1420);--ink:light-dark(#141b2b,#e9edf5);--mut:light-dark(#5d6678,#9aa3b5);--line:light-dark(#e3e6ec,#262e40);--card:light-dark(#f5f6f9,#171e2d);--acc:#d6263f;--acc2:light-dark(#fde8eb,#3a1720);--ok:light-dark(#0f7a4a,#5fd39a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
+h1{font:700 clamp(26px,5vw,36px)/1.05 Outfit,sans-serif;margin:0}
+.wrap{max-width:760px;margin:0 auto;padding:20px max(4vw,14px) 60px}
+.top{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+.tot{color:var(--mut);font-size:14px}
+.tot b{color:var(--ink);font:600 20px Outfit,sans-serif}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:6px;overflow-x:auto}
+.tab{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 15px Outfit,sans-serif;padding:10px 14px;border-radius:999px;min-height:44px;cursor:pointer}
+.tab span{color:var(--mut);font:500 13px Inter;margin-left:6px}
+.tab[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab[aria-selected=true] span{color:inherit;opacity:.7}
+.tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+input,select,button{font:inherit}
+.search{flex:1 1 200px;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:16px}
+select{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:0 10px;font-size:15px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+ul{list-style:none;margin:0;padding:0}
+li{display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+li.has .name{font-weight:600}
+.code{font:600 14px Outfit,sans-serif;color:var(--mut);background:var(--card);border-radius:8px;text-align:center;padding:6px 0}
+.code.none{opacity:.35}
+.name{font-size:16px;overflow-wrap:anywhere}
+.qty{display:flex;align-items:center;gap:4px}
+.qty button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 22px/1 Outfit,sans-serif;cursor:pointer;touch-action:manipulation}
+.qty button:active{background:var(--acc2)}
+.qty input{width:64px;height:44px;text-align:center;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:600 18px Outfit,sans-serif}
+li.has .qty input{border-color:var(--ok);color:var(--ok)}
+li{row-gap:8px;padding:10px 0}
+.steps{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.steps button{height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 16px Outfit,sans-serif;cursor:pointer;touch-action:manipulation}
+.steps button:active{background:var(--acc2);border-color:var(--acc)}
+@media(min-width:640px){.steps{grid-column:auto;grid-template-columns:repeat(5,52px)}li{grid-template-columns:52px minmax(0,1fr) auto auto}}
+.empty{color:var(--mut);padding:30px 0;text-align:center}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.btn{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;cursor:pointer}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.warn{color:var(--acc)}
+.add{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.add input{min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:16px}
+.add .c{width:90px}.add .n{flex:1 1 160px}
+textarea{width:100%;min-height:180px;margin-top:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:12px;font:14px/1.45 ui-monospace,monospace}
+.dlg{position:fixed;inset:0;background:#0008;display:none;place-items:center;padding:20px;z-index:20}
+.dlg.on{display:grid}
+.dlg div{background:var(--bg);border-radius:14px;padding:20px;max-width:360px;width:100%}
+.dlg p{margin:0 0 16px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.cam{display:inline-flex;align-items:center;background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.viewer{position:fixed;inset:0;z-index:30;background:#000;display:none;flex-direction:column}
+.viewer.on{display:flex}
+.viewer img{flex:1;min-height:0;width:100%;object-fit:contain;transform:rotate(180deg);touch-action:pinch-zoom}
+.viewer video{flex:1;min-height:0;width:100%;object-fit:contain;transform:rotate(180deg)}
+.viewer img.up,.viewer video.up{transform:none}
+.viewer [hidden]{display:none}
+.vbar{display:flex;gap:8px;justify-content:center;padding:12px;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.vbar .btn{display:inline-flex;align-items:center}
+.note{color:var(--mut);font-size:13px;margin-top:16px}
+@media(max-width:420px){li{grid-template-columns:44px minmax(0,1fr) auto;gap:8px}.qty button{width:40px}.qty input{width:54px}}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
 </head>
 <body>
-    <p id="cores"></p>
+<div class="wrap">
+  <div class="top">
+    <h1>Controle de estoque</h1>
+    <div class="tot" id="tot"></div>
+  </div>
+  <div class="bar">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="tools">
+      <input class="search" id="q" type="search" placeholder="Buscar cor ou código" autocomplete="off">
+      <select id="f" aria-label="Filtro">
+        <option value="all">Todos</option>
+        <option value="has">Com estoque</option>
+        <option value="zero">Zerados</option>
+      </select>
+      <button class="btn cam" id="camBtn">Câmera invertida</button>
+      <input id="pic" type="file" accept="image/*" capture="environment" hidden>
+    </div>
+  </div>
+  <ul id="list"></ul>
 
-    <div id="reset"></div>
-    
-    <a href="estq.html">Contagem estoque</a>
+  <div class="add">
+    <input class="c" id="nc" placeholder="Código">
+    <input class="n" id="nn" placeholder="Nova cor nesta aba">
+    <button class="btn" id="addBtn">Adicionar</button>
+  </div>
 
-    <script src="entrada.js"></script>
+  <div class="actions">
+    <button class="btn pri" id="copy">Copiar resumo</button>
+    <button class="btn" id="show">Ver resumo</button>
+    <button class="btn warn" id="reset">Zerar esta aba</button>
+  </div>
+  <textarea id="out" hidden readonly></textarea>
+  <p class="note">A contagem fica salva neste navegador. Em outro aparelho começa do zero, então use "Copiar resumo" pra guardar ou mandar.</p>
+</div>
+
+<div class="dlg" id="dlg"><div><p id="dlgTxt"></p><div class="actions" style="margin:0"><button class="btn warn" id="yes">Zerar</button><button class="btn" id="no">Cancelar</button></div></div></div>
+<div class="toast" id="toast"></div>
+<div class="viewer" id="viewer">
+  <img id="vimg" alt="Foto da etiqueta">
+  <video id="vid" playsinline muted autoplay hidden></video>
+  <div class="vbar">
+    <label class="btn pri" for="pic" id="again">Outra foto</label>
+    <button class="btn" id="rot">Girar</button>
+    <button class="btn" id="vclose">Fechar</button>
+  </div>
+</div>
+
+<script>
+{
+const vies=["PRETO","BRANCO","RUBI","MARINHO","TEOS","BASE","MOCHA MOUSSE","PINK","MALETA","RUBRO","SANDIA/LIRIS","BUBBLEGUM","BISCOITO","TURQUESA","ROSA BEBÊ","FANTASTICO","ODALISCA","PANTERA","TAME","AZULEJO","FROZEN","CHRONOS","IRIS","AMALIA","FUCSIA","CORAL","CORINGA"].map(n=>["",n]);
+const over=[["999","PRETO"],["900","BRANCO"],["381","RUBI"],["188","MARINHO"],["711","TEOS/MALETA"],["514","BASE"],["550","MOCHA MOUSSE"],["288","PINK"],["390","RUBRO"],["285","SANDIA/LIRIS"],["138","FROZEN"],["420","FANTASTICO"],["493","ODALISCA"],["130","TURQUESA"],["251","PANTERA"],["255","BUBBLE"],["672","CHRONOS"],["268","NINFA"],["620","AMARELO"],["210","ROSA BEBÊ"],["281","AMALIA"],["757","HERANÇA"],["387","DESEJO/CORINGA"],["554","CHOCOLATE"],["450","AZULEJO"],["776","PAVAO"],["330","RICH"],["707","TAME"],["762","SALVIA"]];
+const reta=over.map(([c,n])=>[c,c==="620"?"BISCOITO":c==="210"?"ROSA BEBE":n]);
+const BASE={vies:{label:"Viés",items:vies},over:{label:"Linha Over",items:over},reta:{label:"Linha Reta",items:reta},tecido:{label:"Tecido",items:vies}};
+const KEY="estoque-v1";
+const STEPS=[1,2,3,6,12];
+const $=id=>document.getElementById(id);
+let state;
+try{state=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!state||!state.cats){
+  state={tab:"vies",cats:{}};
+}
+for(const k in BASE)if(!state.cats[k])state.cats[k]=BASE[k].items.map(([code,name])=>({code,name,qty:0}));
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sum=k=>state.cats[k].reduce((a,i)=>a+(+i.qty||0),0);
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+
+function tabs(){
+  $("tabs").innerHTML=Object.keys(BASE).map(k=>`<button class="tab" role="tab" data-k="${k}" aria-selected="${k===state.tab}">${BASE[k].label}<span>${sum(k)}</span></button>`).join("");
+  const all=Object.keys(BASE).reduce((a,k)=>a+sum(k),0);
+  $("tot").innerHTML=`Total geral <b>${all}</b>`;
+}
+function list(){
+  const q=norm($("q").value.trim()),f=$("f").value;
+  const rows=state.cats[state.tab].map((it,i)=>({it,i})).filter(({it})=>
+    (!q||norm(it.name).includes(q)||it.code.includes(q))&&
+    (f==="all"||(f==="has"?it.qty>0:!(it.qty>0))));
+  $("list").innerHTML=rows.length?rows.map(({it,i})=>`<li class="${it.qty>0?"has":""}" data-i="${i}">
+    <span class="code ${it.code?"":"none"}">${esc(it.code||"–")}</span>
+    <span class="name">${esc(it.name)}</span>
+    <span class="qty"><button data-d="-1" aria-label="Menos 1 ${esc(it.name)}">−</button><input type="number" inputmode="numeric" min="0" value="${it.qty}" aria-label="Quantidade ${esc(it.name)}"></span>
+    <span class="steps">${STEPS.map(n=>`<button data-d="${n}" aria-label="Mais ${n} ${esc(it.name)}">+${n}</button>`).join("")}</span>
+  </li>`).join(""):`<li class="empty" style="display:block">Nada encontrado.</li>`;
+}
+function render(){tabs();list()}
+function refreshRow(li,i){
+  const it=state.cats[state.tab][i];
+  li.classList.toggle("has",it.qty>0);
+  li.querySelector("input").value=it.qty;
+  tabs();save();
+}
+function summary(k){
+  const items=state.cats[k].filter(i=>i.qty>0);
+  const lines=items.map(i=>`${i.code?i.code+" ":""}${i.name}: ${i.qty}`);
+  return `${BASE[k].label.toUpperCase()} (total ${sum(k)})\n${lines.length?lines.join("\n"):"(nada contado)"}`;
+}
+const fullSummary=()=>{const d=new Date().toLocaleDateString("pt-BR");return `Estoque ${d}\n\n`+Object.keys(BASE).map(summary).join("\n\n")};
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1800)}
+
+$("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(!b)return;state.tab=b.dataset.k;save();render()});
+$("q").addEventListener("input",list);
+$("f").addEventListener("change",list);
+$("list").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-d]");if(!b)return;
+  const li=b.closest("li"),i=+li.dataset.i,it=state.cats[state.tab][i];
+  it.qty=Math.max(0,(+it.qty||0)+(+b.dataset.d));refreshRow(li,i);
+});
+$("list").addEventListener("change",e=>{
+  if(e.target.tagName!=="INPUT")return;
+  const li=e.target.closest("li"),i=+li.dataset.i;
+  state.cats[state.tab][i].qty=Math.max(0,Math.round(+e.target.value||0));refreshRow(li,i);
+});
+$("list").addEventListener("focusin",e=>{if(e.target.tagName==="INPUT")e.target.select()});
+$("addBtn").addEventListener("click",()=>{
+  const n=$("nn").value.trim().toUpperCase();if(!n)return;
+  state.cats[state.tab].push({code:$("nc").value.trim(),name:n,qty:0});
+  $("nn").value=$("nc").value="";save();render();toast("Cor adicionada");
+});
+$("copy").addEventListener("click",async()=>{
+  const t=fullSummary();
+  try{await navigator.clipboard.writeText(t);toast("Resumo copiado")}
+  catch(e){$("out").hidden=false;$("out").value=t;$("out").select();toast("Copie o texto abaixo")}
+});
+$("show").addEventListener("click",()=>{const o=$("out");o.hidden=!o.hidden;o.value=fullSummary()});
+$("reset").addEventListener("click",()=>{$("dlgTxt").textContent=`Zerar todas as quantidades de ${BASE[state.tab].label}?`;$("dlg").classList.add("on")});
+$("no").addEventListener("click",()=>$("dlg").classList.remove("on"));
+$("yes").addEventListener("click",()=>{state.cats[state.tab].forEach(i=>i.qty=0);save();render();$("dlg").classList.remove("on");toast("Aba zerada")});
+let url;
+$("pic").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  if(url)URL.revokeObjectURL(url);
+  url=URL.createObjectURL(f);
+  stopCam();
+  $("vimg").src=url;$("vimg").hidden=false;$("vid").hidden=true;$("again").hidden=false;
+  $("vimg").classList.remove("up");$("viewer").classList.add("on");
+  e.target.value="";
+});
+let stream=null;
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$("vid").srcObject=null}
+$("camBtn").addEventListener("click",async()=>{
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw 0;
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+    const v=$("vid");v.srcObject=stream;v.hidden=false;v.classList.remove("up");
+    $("vimg").hidden=true;$("again").hidden=true;$("viewer").classList.add("on");
+    try{await v.play()}catch(e){}
+  }catch(e){
+    stopCam();toast("Câmera ao vivo bloqueada aqui, abrindo foto");
+    $("pic").click();
+  }
+});
+$("rot").addEventListener("click",()=>{$("vimg").classList.toggle("up");$("vid").classList.toggle("up")});
+$("vclose").addEventListener("click",()=>{stopCam();$("viewer").classList.remove("on")});
+render();
+}
+</script>
 </body>
 </html>
